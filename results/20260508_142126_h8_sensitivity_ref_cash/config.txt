@@ -1,0 +1,36 @@
+List of 21
+ $ sim_name      : chr "h8_sensitivity_ref_cash"
+ $ base_dir      : chr "results"
+ $ seed          : num 20251015
+ $ data_dir      : chr "data"
+ $ data_start    : Date[1:1], format: "2015-10-07"
+ $ data_end      : Date[1:1], format: "2025-10-01"
+ $ expected_weeks: int 522
+ $ j_star        : int 1
+ $ test_weeks    : num 104
+ $ chains        : num 4
+ $ iter          : num 2000
+ $ warmup        : num 1000
+ $ adapt_delta   : num 0.9
+ $ max_treedepth : num 12
+ $ rhat_max      : num 1.01
+ $ ess_bulk_min  : num 400
+ $ eps_prob      : num 1e-10
+ $ eps_shape     : num 1e-10
+ $ fred_files    :List of 4
+  ..$ total     : chr "TLAACBW027SBOG.csv"
+  ..$ cash      : chr "CASACBW027SBOG.csv"
+  ..$ securities: chr "SBCACBW027SBOG.csv"
+  ..$ loans     : chr "TOTLL.csv"
+ $ S_sub         : num 400
+ $ rolling       :List of 10
+  ..$ do           : logi TRUE
+  ..$ weeks        : num 104
+  ..$ step         : num 1
+  ..$ min_train    : num 104
+  ..$ chains       : num 2
+  ..$ iter         : num 1200
+  ..$ warmup       : num 600
+  ..$ adapt_delta  : num 0.95
+  ..$ max_treedepth: num 12
+  ..$ S_sub        : num 200

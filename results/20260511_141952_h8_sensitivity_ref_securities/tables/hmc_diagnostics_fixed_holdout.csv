@@ -1,0 +1,3 @@
+model,divergences,max_treedepth_hits,n_rhat_gt,n_low_ess_bulk,max_rhat,min_ess_bulk,attempts
+Centered MA,1,0,0,0,1.0031220106960508,1369.7872105160905,1
+Raw MA,1,0,0,0,1.0028567098040095,1084.2981501950037,1
