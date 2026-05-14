@@ -1,62 +1,108 @@
-# Centered-DARMA: Locked-window results bundle
+# Centered-DARMA
 
-This bundle contains the locked-window rolling-origin results for the
-Centered-MA vs Raw-MA comparison reported in:
+Code and locked-window results for:
 
 > Katz, Harrison (2026). *Centered-Innovation MA for Bayesian Dirichlet ARMA:
 > Theoretical Equivalence and an Application to Bank-Asset Shares.*
 
-All runs use:
+The repository contains the analysis scripts, frozen input data, and the
+exact locked-window results reported in Tables 1--4 and Figures 1--6 of the
+manuscript.
 
-- **Locked data window**: October 7, 2015 through October 1, 2025 (T = 522
-  weekly observations, T_train = 418, T_test = 104).
-- **Seed-symmetric protocol**: identical random seed at every rolling origin
-  for both the Centered-MA and Raw-MA specifications, so that any difference
-  in HMC behavior is attributable to posterior geometry, not seed-induced
-  sampling variability.
-- **No auto-refits**: a divergence-triggered refit policy is disabled. Both
-  specifications use a fixed 2-chain, 1,200-iteration sampler with
-  `adapt_delta = 0.90` and `max_treedepth = 12`.
-
-## Directory layout
+## Repository layout
 
 ```
 .
-|-- README.md                                  # this file
-|-- results/
-|   |-- h8_weekly_seed_symmetric_diagnostic_loans_main/   # main analysis (loans reference)
-|   |-- 20260508_142126_h8_sensitivity_ref_cash/          # cash sensitivity run
-|   |-- 20260511_141952_h8_sensitivity_ref_securities/    # securities sensitivity run
-|   `-- 20260508_142710_h8_sensitivity_ref_other/         # other sensitivity run
-|-- scripts/
-|   |-- build_sensitivity_figures.py           # regenerates cross-reference figures (Python)
-|   `-- build_sensitivity_figures.R            # same, in R
+|-- README.md                          # this file
+|-- centered_DARMA_main.R              # main analysis (loans reference)
+|-- centered_DARMA_sensitivity.R       # four-reference sensitivity analysis
+|-- data/                              # frozen FRED CSV snapshots (see Data section)
+|   |-- TLAACBW027SBOG.csv             # total assets
+|   |-- CASACBW027SBOG.csv             # cash
+|   |-- SBCACBW027SBOG.csv             # securities
+|   `-- TOTLL.csv                      # loans
+|-- results/                           # locked-window run outputs
+|   |-- h8_weekly_seed_symmetric_diagnostic_loans_main/   # main analysis
+|   |-- 20260508_142126_h8_sensitivity_ref_cash/          # cash sensitivity
+|   |-- 20260508_142710_h8_sensitivity_ref_other/         # other sensitivity
+|   `-- 20260511_141952_h8_sensitivity_ref_securities/    # securities sensitivity
+`-- scripts/
+    |-- build_sensitivity_figures.py   # regenerate cross-reference figures (Python)
+    `-- build_sensitivity_figures.R    # same, in R
 ```
 
-Each `results/<run>/` directory contains:
+## Analysis configuration
 
-- `config.txt`: the full configuration used for that run (data window, sampler
-  settings, priors, seed protocol, sim name).
-- `h8_weekly_composition.csv`: the frozen weekly composition input data
-  (cash, securities, loans, other shares) for the locked window. Identical
-  across all four runs.
-- `tables/`: CSV outputs from the run.
-- `figs/`: PNG outputs from the run (per-reference cumulative ELPD curve,
-  per-origin divergence plot, total-share RMSE plot).
+Both scripts use:
 
-## Key tables in each `results/<run>/tables/` directory
+- **Locked data window**: October 7, 2015 through October 1, 2025
+  (T = 522 weekly observations, T_train = 418, T_test = 104). The script
+  fails fast if the realized window does not match.
+- **Seed-symmetric protocol**: identical random seed at every rolling
+  origin for both Centered-MA and Raw-MA, so HMC differences are
+  attributable to posterior geometry rather than to seed variability.
+- **No auto-refits**: a divergence-triggered refit policy is disabled.
+  Both specifications use a fixed sampler at each origin.
+- **Rolling sampler**: 2 chains, 1,200 iterations, 600 warmup,
+  `adapt_delta = 0.95`, `max_treedepth = 12`, `init = 0`.
 
-| File | Contents |
-|------|----------|
-| `rolling_diagnostic_summary.csv` | Per-spec totals: divergences, R-hat, ESS, treedepth hits |
-| `rolling_diagnostics.csv` | Per-origin per-spec diagnostics |
-| `rolling_elpd_summary.csv` | Cumulative ELPD difference (Centered minus Raw), per-origin mean and SD, win counts |
-| `rolling_elpd_cov95.csv` | Per-origin Centered/Raw ELPD and 95% coverage indicator |
-| `rolling_per_origin_totals.csv` | Per-origin per-spec total-share RMSE and MAE |
-| `metrics_*_fixed.csv` | Fixed-holdout metrics (retained for completeness; not reported in the manuscript) |
+## Data
 
-## Headline numbers (from `rolling_diagnostic_summary.csv` and
-`rolling_elpd_summary.csv` across the four references)
+The `data/` directory contains direct CSV downloads from FRED for the four
+H.8 series used in the analysis. To regenerate from FRED, download each at:
+
+- `https://fred.stlouisfed.org/graph/fredgraph.csv?id=TLAACBW027SBOG`  (total assets)
+- `https://fred.stlouisfed.org/graph/fredgraph.csv?id=CASACBW027SBOG`  (cash)
+- `https://fred.stlouisfed.org/graph/fredgraph.csv?id=SBCACBW027SBOG`  (securities)
+- `https://fred.stlouisfed.org/graph/fredgraph.csv?id=TOTLL`           (loans)
+
+Each CSV has two columns (`DATE`/`observation_date`, value). Place the
+files in `data/` with the names above.
+
+## Reproducing the manuscript results
+
+### Run the main analysis (loans reference)
+
+```r
+source("centered_DARMA_main.R")
+```
+
+Produces a timestamped directory under `results/` with `config.txt`,
+`tables/`, `figs/`, and the merged input `h8_weekly_composition.csv`.
+
+### Run the four-reference sensitivity analysis
+
+```r
+# Edit the ref_label variable in centered_DARMA_sensitivity.R, then:
+source("centered_DARMA_sensitivity.R")
+```
+
+The script writes its output to a timestamped directory under `results/`
+named `<timestamp>_h8_sensitivity_ref_<ref_label>` where `<ref_label>` is
+one of `cash`, `securities`, `other`, or `loans`.
+
+### Regenerate the cross-reference figures
+
+The two figures comparing all four references are not produced by the R
+scripts above (which run one reference at a time). Instead:
+
+```bash
+python3 scripts/build_sensitivity_figures.py
+```
+
+or
+
+```r
+source("scripts/build_sensitivity_figures.R")
+```
+
+Both write `sensitivity_cumelpd_by_ref.png` and
+`sensitivity_divergences_by_ref.png` into a new `figs_sensitivity/`
+directory at the repo root.
+
+## Headline numbers
+
+Across the four ALR references on the locked 104-origin rolling window:
 
 | Reference     | Centered divs | Raw divs | Raw / Cent | Cum ELPD diff |
 |---------------|--------------:|---------:|-----------:|---------------:|
@@ -65,25 +111,19 @@ Each `results/<run>/` directory contains:
 | Securities    | 11            | 33       | 3.00       | +0.10          |
 | Other         | 60            | 186      | 3.10       | +0.23          |
 
-## Reproducing the cross-reference figures
+All numbers can be read directly from
+`results/<run>/tables/rolling_diagnostic_summary.csv` and
+`results/<run>/tables/rolling_elpd_summary.csv`.
 
-### Python
-```
-pip install pandas matplotlib
-python3 scripts/build_sensitivity_figures.py
-```
+## Key result files per run
 
-### R
-```
-Rscript scripts/build_sensitivity_figures.R
-```
+Each `results/<run>/tables/` directory contains:
 
-Both scripts write `sensitivity_cumelpd_by_ref.png` and
-`sensitivity_divergences_by_ref.png` into a new `figs_sensitivity/` directory
-at the bundle root. The numerical inputs come from the CSVs in
-`results/<run>/tables/`; no Stan re-fitting is required.
-
-## License
-
-This bundle accompanies the manuscript and its associated public
-repository. See the main repository for license terms.
+| File | Contents |
+|------|----------|
+| `rolling_diagnostic_summary.csv` | Per-spec totals: divergences, R-hat, ESS, treedepth hits |
+| `rolling_diagnostics.csv` | Per-origin per-spec diagnostics |
+| `rolling_elpd_summary.csv` | Cumulative ELPD difference and win counts |
+| `rolling_elpd_cov95.csv` | Per-origin Centered/Raw ELPD and componentwise coverage |
+| `rolling_per_origin_totals.csv` | Per-origin per-spec total-share RMSE and MAE |
+| `metrics_*_fixed.csv` | Fixed-holdout metrics (retained for completeness; not reported in the manuscript) |
