@@ -31,7 +31,6 @@ All runs use:
 |-- scripts/
 |   |-- build_sensitivity_figures.py           # regenerates cross-reference figures (Python)
 |   `-- build_sensitivity_figures.R            # same, in R
-`-- figs_sensitivity/                          # output directory (created on first run)
 ```
 
 Each `results/<run>/` directory contains:
